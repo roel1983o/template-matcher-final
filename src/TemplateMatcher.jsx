@@ -99,10 +99,17 @@ export default function TemplateMatcher() {
   const mogelijkeTemplates = templates.filter((template) => {
     if (aantalAdvertenties === 3) return false;
     if (aantalAdvertenties > 0) {
-      return template.advertentie && aantalAdvertenties === 1 && matchesTemplate(template) && advertenties.every((adv) => {
-      const tAdv = template.advertentie;
-      return adv.kolommen == tAdv.kolommen && adv.vorm == tAdv.vorm && adv.plek == tAdv.plek;
-    });
+      if (!template.advertentie) return false;
+      if (aantalAdvertenties === 1 && advertenties.length === 1) {
+        const adv = advertenties[0];
+        const incompleet = [adv.kolommen, adv.vorm, adv.plek].some((v) => v === "");
+        // if (incompleet) return !!template.advertentie;
+        return (!adv.kolommen || adv.kolommen == template.advertentie.kolommen) &&
+               (!adv.vorm || adv.vorm === template.advertentie.vorm) &&
+               (!adv.plek || adv.plek === template.advertentie.plek) &&
+               matchesTemplate(template);
+      }
+      return false;
     }
     return !template.advertentie && matchesTemplate(template);
   });
@@ -139,7 +146,11 @@ export default function TemplateMatcher() {
         <select
           className="border border-[#002f6c] rounded p-2"
           value={aantalAdvertenties}
-          onChange={(e) => setAantalAdvertenties(Number(e.target.value))}
+          onChange={(e) => {
+            const aantal = Number(e.target.value);
+            setAantalAdvertenties(aantal);
+            setAdvertenties([...Array(aantal)].map(() => ({ kolommen: "", vorm: "", plek: "" })));
+          }}
         >
           <option value="0">0</option>
           <option value="1">1</option>
@@ -152,7 +163,7 @@ export default function TemplateMatcher() {
     <div className="flex flex-col mr-1">
       <label className="text-sm font-semibold mb-1 block">Advertentie {index + 1}: Aantal kolommen</label>
       <select className="border border-[#002f6c] w-36 p-1 rounded" value={advertenties[index]?.kolommen || ''} onChange={(e) => updateAdvertentie(index, 'kolommen', e.target.value)}>
-        {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+        {[<option key="" value="">Selecteer</option>, ...[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)]}
       </select>
     </div>
     <div className="flex flex-col mr-1">
